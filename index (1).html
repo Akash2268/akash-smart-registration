@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Smart Registration System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #eef3ff;
+            text-align: center;
+            margin: 0;
+        }
+        header {
+            background-color: #173b75;
+            color: white;
+            padding: 25px;
+        }
+        h1 { margin: 0; }
+        .services {
+            background: white;
+            margin: 30px auto;
+            padding: 25px;
+            width: 70%;
+            max-width: 700px;
+            border-radius: 12px;
+        }
+        input, select {
+            padding: 10px;
+            width: 70%;
+            max-width: 320px;
+            border: 1px solid #aab8d6;
+            border-radius: 6px;
+        }
+        button {
+            background-color: #2463c5;
+            color: white;
+            border: none;
+            padding: 12px;
+            margin: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #173b75; }
+        .msg { color: #173b75; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>AI-Based Smart Registration System</h1>
+        <p>Citizen Service Portal</p>
+    </header>
+
+    <!-- 1. Citizen Registration -->
+    <div class="services">
+        <h2>Citizen Registration</h2>
+        <form id="regForm">
+            <input type="text" id="regName" placeholder="Enter Your Name" required>
+            <br><br>
+            <input type="tel" id="regMobile" placeholder="Enter Mobile Number"
+                   pattern="[0-9]{10}" required>
+            <br><br>
+            <input type="email" id="regEmail" placeholder="Enter Email Address" required>
+            <br><br>
+            <button type="submit">Register</button>
+        </form>
+        <p id="regResult" class="msg"></p>
+    </div>
+
+    <!-- 2. Our Services -->
+    <div class="services">
+        <h2>Our Services</h2>
+        <p>Select the service you need</p>
+        <button onclick="showService('Ration Card')">Ration Card</button>
+        <button onclick="showService('Income Certificate')">Income Certificate</button>
+        <button onclick="showService('Birth Certificate')">Birth Certificate</button>
+        <button onclick="showService('Community Certificate')">Community Certificate</button>
+        <p id="serviceInfo" class="msg"></p>
+    </div>
+
+    <!-- 3. Ration Card Application -->
+    <div class="services">
+        <h2>Ration Card Application</h2>
+        <form id="appForm">
+            <input type="text" id="appFullName" placeholder="Full Name" required>
+            <br><br>
+            <input type="text" id="appAddress" placeholder="Address" required>
+            <br><br>
+            <select id="appRequest" required>
+                <option value="">Select Request</option>
+                <option>Name Change</option>
+                <option>Address Change</option>
+                <option>Add Family Member</option>
+            </select>
+            <br><br>
+            <button type="submit">Submit Application</button>
+        </form>
+        <p id="result" class="msg"></p>
+    </div>
+
+    <!-- 4. AI Citizen Assistant -->
+    <div class="services">
+        <h2>AI Citizen Assistant 🤖</h2>
+        <p>Ask me about our services!</p>
+        <input type="text" id="question" placeholder="Type your question">
+        <button type="button" onclick="askBot()">Ask</button>
+        <p id="answer" class="msg"></p>
+    </div>
+
+    <!-- 5. Check Application Status -->
+    <div class="services">
+        <h2>Check Application Status</h2>
+        <input type="text" id="appName" placeholder="Enter Your Name">
+        <button type="button" onclick="checkStatus()">Check Status</button>
+        <p id="statusResult" class="msg"></p>
+    </div>
+
+    <!-- 6. Admin Dashboard -->
+    <div class="services">
+        <h2>Admin Dashboard</h2>
+        <p>Manage Citizen Applications</p>
+        <input type="text" id="adminName" placeholder="Applicant Name">
+        <br><br>
+        <button type="button" onclick="updateStatus('Approved')">Approve</button>
+        <button type="button" onclick="updateStatus('Rejected')">Reject</button>
+        <p id="adminResult" class="msg"></p>
+    </div>
+
+    <script>
+        // ---------- simple storage (browser localStorage, with fallback) ----------
+        let memoryStore = {};
+
+        function loadApps() {
+            try {
+                return JSON.parse(localStorage.getItem("applications") || "{}");
+            } catch (e) {
+                return memoryStore;
+            }
+        }
+
+        function saveApps(apps) {
+            memoryStore = apps;
+            try {
+                localStorage.setItem("applications", JSON.stringify(apps));
+            } catch (e) { /* storage not available, memory fallback used */ }
+        }
+
+        function key(name) {
+            return name.trim().toLowerCase();
+        }
+
+        // ---------- 1. Registration ----------
+        document.getElementById("regForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const name = document.getElementById("regName").value.trim();
+            document.getElementById("regResult").innerText =
+                "Welcome, " + name + "! You are registered successfully.";
+            this.reset();
+        });
+
+        // ---------- 2. Services ----------
+        function showService(service) {
+            document.getElementById("serviceInfo").innerText =
+                service + " selected. Please use the application form below or ask the AI Assistant.";
+        }
+
+        // ---------- 3. Application submit ----------
+        document.getElementById("appForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const name = document.getElementById("appFullName").value;
+            const request = document.getElementById("appRequest").value;
+            const apps = loadApps();
+            apps[key(name)] = { name: name.trim(), request: request, status: "Pending" };
+            saveApps(apps);
+            document.getElementById("result").innerText =
+                "Application submitted successfully!";
+            this.reset();
+        });
+
+        // ---------- 4. Chatbot (rule-based) ----------
+        function askBot() {
+            const q = document.getElementById("question").value.toLowerCase();
+            const a = document.getElementById("answer");
+
+            if (q.includes("ration")) {
+                a.innerText = "You can apply for ration card name or address changes.";
+            } else if (q.includes("income")) {
+                a.innerText = "You can apply for an income certificate.";
+            } else if (q.includes("birth")) {
+                a.innerText = "You can request a birth certificate or correction.";
+            } else {
+                a.innerText = "Please ask about ration card, income certificate or birth certificate.";
+            }
+        }
+
+        // ---------- 5. Status check ----------
+        function checkStatus() {
+            const name = document.getElementById("appName").value;
+            const out = document.getElementById("statusResult");
+
+            if (name.trim() === "") {
+                out.innerText = "Please enter your name.";
+                return;
+            }
+            const app = loadApps()[key(name)];
+            if (!app) {
+                out.innerText = "No application found for this name.";
+            } else if (app.status === "Pending") {
+                out.innerText = "Your application is pending for admin approval.";
+            } else {
+                out.innerText = "Your application has been " + app.status.toLowerCase() + ".";
+            }
+        }
+
+        // ---------- 6. Admin ----------
+        function updateStatus(status) {
+            const name = document.getElementById("adminName").value;
+            const out = document.getElementById("adminResult");
+
+            if (name.trim() === "") {
+                out.innerText = "Please enter applicant name.";
+                return;
+            }
+            const apps = loadApps();
+            if (!apps[key(name)]) {
+                out.innerText = "No application found for " + name.trim() + ".";
+                return;
+            }
+            apps[key(name)].status = status;
+            saveApps(apps);
+            out.innerText = name.trim() + "'s application " + status.toLowerCase() + " successfully!";
+        }
+    </script>
+
+</body>
+</html>
